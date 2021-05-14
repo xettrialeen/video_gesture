@@ -1,13 +1,17 @@
 /* The MIT License (MIT)
+
 Copyright (c) 2014-2015 Benoit Tremblay <trembl.ben@gmail.com>
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -17,21 +21,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. */
 /*global define, YT*/
 (function (root, factory) {
-  if (typeof exports === "object" && typeof module !== "undefined") {
-    var videojs = require("video.js");
-    module.exports = factory(videojs.default || videojs);
-  } else if (typeof define === "function" && define.amd) {
-    define(["videojs"], function (videojs) {
+  if (typeof define === "function" && define.amd) {
+    define(["video.js"], function (videojs) {
       return (root.Youtube = factory(videojs));
     });
+  } else if (typeof module === "object" && module.exports) {
+    module.exports = root.Youtube = factory(require("video.js"));
   } else {
     root.Youtube = factory(root.videojs);
   }
 })(this, function (videojs) {
   "use strict";
 
-  var _isOnMobile = videojs.browser.IS_IOS || videojs.browser.IS_NATIVE_ANDROID;
-  var Tech = videojs.getTech("Tech");
+  var Tech = videojs.getComponent("Tech");
 
   var Youtube = videojs.extend(Tech, {
     constructor: function (options, ready) {
@@ -42,50 +44,27 @@ THE SOFTWARE. */
 
       // Set the vjs-youtube class to the player
       // Parent is not set yet so we have to wait a tick
-      this.setTimeout(
+      setTimeout(
         function () {
-          if (this.el_) {
-            this.el_.parentNode.className += " vjs-youtube";
+          this.el_.parentNode.className += " vjs-youtube";
 
-            if (_isOnMobile) {
-              this.el_.parentNode.className += " vjs-youtube-mobile";
-            }
+          if (_isOnMobile) {
+            this.el_.parentNode.className += " vjs-youtube-mobile";
+          }
 
-            if (Youtube.isApiReady) {
-              this.initYTPlayer();
-            } else {
-              Youtube.apiReadyQueue.push(this);
-            }
+          if (Youtube.isApiReady) {
+            this.initYTPlayer();
+          } else {
+            Youtube.apiReadyQueue.push(this);
           }
         }.bind(this)
       );
     },
 
     dispose: function () {
-      if (this.ytPlayer) {
-        //Dispose of the YouTube Player
-        if (this.ytPlayer.stopVideo) {
-          this.ytPlayer.stopVideo();
-        }
-        if (this.ytPlayer.destroy) {
-          this.ytPlayer.destroy();
-        }
-      } else {
-        //YouTube API hasn't finished loading or the player is already disposed
-        var index = Youtube.apiReadyQueue.indexOf(this);
-        if (index !== -1) {
-          Youtube.apiReadyQueue.splice(index, 1);
-        }
-      }
-      this.ytPlayer = null;
-
       this.el_.parentNode.className = this.el_.parentNode.className
         .replace(" vjs-youtube", "")
         .replace(" vjs-youtube-mobile", "");
-      this.el_.parentNode.removeChild(this.el_);
-
-      //Needs to be called after the YouTube player is destroyed, otherwise there will be a null reference exception
-      Tech.prototype.dispose.call(this);
     },
 
     createEl: function () {
@@ -95,7 +74,6 @@ THE SOFTWARE. */
         "style",
         "width:100%;height:100%;top:0;left:0;position:absolute"
       );
-      div.setAttribute("class", "vjs-tech");
 
       var divWrapper = document.createElement("div");
       divWrapper.appendChild(div);
@@ -149,6 +127,10 @@ THE SOFTWARE. */
         playerVars.disablekb = this.options_.disablekb;
       }
 
+      if (typeof this.options_.end !== "undefined") {
+        playerVars.end = this.options_.end;
+      }
+
       if (typeof this.options_.color !== "undefined") {
         playerVars.color = this.options_.color;
       }
@@ -158,11 +140,6 @@ THE SOFTWARE. */
         playerVars.fs = 0;
       } else if (typeof this.options_.fs !== "undefined") {
         playerVars.fs = this.options_.fs;
-      }
-
-      if (this.options_.source.src.indexOf("end=") !== -1) {
-        var srcEndTime = this.options_.source.src.match(/end=([0-9]*)/);
-        this.options_.end = parseInt(srcEndTime[1]);
       }
 
       if (typeof this.options_.end !== "undefined") {
@@ -210,11 +187,6 @@ THE SOFTWARE. */
         playerVars.showinfo = this.options_.showinfo;
       }
 
-      if (this.options_.source.src.indexOf("start=") !== -1) {
-        var srcStartTime = this.options_.source.src.match(/start=([0-9]*)/);
-        this.options_.start = parseInt(srcStartTime[1]);
-      }
-
       if (typeof this.options_.start !== "undefined") {
         playerVars.start = this.options_.start;
       }
@@ -223,67 +195,32 @@ THE SOFTWARE. */
         playerVars.theme = this.options_.theme;
       }
 
-      // Allow undocumented options to be passed along via customVars
-      if (typeof this.options_.customVars !== "undefined") {
-        var customVars = this.options_.customVars;
-        Object.keys(customVars).forEach(function (key) {
-          playerVars[key] = customVars[key];
-        });
-      }
-
       this.activeVideoId = this.url ? this.url.videoId : null;
       this.activeList = playerVars.list;
 
-      var playerConfig = {
+      this.ytPlayer = new YT.Player(this.options_.techId, {
         videoId: this.activeVideoId,
         playerVars: playerVars,
         events: {
           onReady: this.onPlayerReady.bind(this),
           onPlaybackQualityChange:
             this.onPlayerPlaybackQualityChange.bind(this),
-          onPlaybackRateChange: this.onPlayerPlaybackRateChange.bind(this),
           onStateChange: this.onPlayerStateChange.bind(this),
-          onVolumeChange: this.onPlayerVolumeChange.bind(this),
           onError: this.onPlayerError.bind(this),
         },
-      };
-
-      if (
-        typeof this.options_.enablePrivacyEnhancedMode !== "undefined" &&
-        this.options_.enablePrivacyEnhancedMode
-      ) {
-        playerConfig.host = "https://www.youtube-nocookie.com";
-      }
-
-      this.ytPlayer = new YT.Player(this.options_.techId, playerConfig);
+      });
     },
 
     onPlayerReady: function () {
-      if (this.options_.muted) {
-        this.ytPlayer.mute();
-      }
-
-      var playbackRates = this.ytPlayer.getAvailablePlaybackRates();
-      if (playbackRates.length > 1) {
-        this.featuresPlaybackRate = true;
-      }
-
       this.playerReady_ = true;
       this.triggerReady();
 
       if (this.playOnReady) {
         this.play();
-      } else if (this.cueOnReady) {
-        this.cueVideoById_(this.url.videoId);
-        this.activeVideoId = this.url.videoId;
       }
     },
 
     onPlayerPlaybackQualityChange: function () {},
-
-    onPlayerPlaybackRateChange: function () {
-      this.trigger("ratechange");
-    },
 
     onPlayerStateChange: function (e) {
       var state = e.data;
@@ -292,14 +229,10 @@ THE SOFTWARE. */
         return;
       }
 
-      this.lastState = state;
-
       switch (state) {
         case -1:
-          this.trigger("loadstart");
           this.trigger("loadedmetadata");
           this.trigger("durationchange");
-          this.trigger("ratechange");
           break;
 
         case YT.PlayerState.ENDED:
@@ -331,75 +264,45 @@ THE SOFTWARE. */
           this.player_.trigger("waiting");
           break;
       }
-    },
 
-    onPlayerVolumeChange: function () {
-      this.trigger("volumechange");
+      this.lastState = state;
     },
 
     onPlayerError: function (e) {
       this.errorNumber = e.data;
-      this.trigger("pause");
       this.trigger("error");
+
+      this.ytPlayer.stopVideo();
+      this.ytPlayer.destroy();
+      this.ytPlayer = null;
     },
 
     error: function () {
-      var code = 1000 + this.errorNumber; // as smaller codes are reserved
       switch (this.errorNumber) {
         case 5:
-          return {
-            code: code,
-            message: "Error while trying to play the video",
-          };
+          return { code: "Error while trying to play the video" };
 
         case 2:
         case 100:
-          return { code: code, message: "Unable to find the video" };
+        case 150:
+          return { code: "Unable to find the video" };
 
         case 101:
-        case 150:
           return {
-            code: code,
-            message:
-              "Playback on other Websites has been disabled by the video owner.",
+            code: "Playback on other Websites has been disabled by the video owner.",
           };
       }
 
-      return {
-        code: code,
-        message: "YouTube unknown error (" + this.errorNumber + ")",
-      };
-    },
-
-    loadVideoById_: function (id) {
-      var options = {
-        videoId: id,
-      };
-      if (this.options_.start) {
-        options.startSeconds = this.options_.start;
-      }
-      if (this.options_.end) {
-        options.endSeconds = this.options_.end;
-      }
-      this.ytPlayer.loadVideoById(options);
-    },
-
-    cueVideoById_: function (id) {
-      var options = {
-        videoId: id,
-      };
-      if (this.options_.start) {
-        options.startSeconds = this.options_.start;
-      }
-      if (this.options_.end) {
-        options.endSeconds = this.options_.end;
-      }
-      this.ytPlayer.cueVideoById(options);
+      return { code: "YouTube unknown error (" + this.errorNumber + ")" };
     },
 
     src: function (src) {
       if (src) {
         this.setSrc({ src: src });
+
+        if (this.options_.autoplay && !_isOnMobile) {
+          this.play();
+        }
       }
 
       return this.source;
@@ -433,7 +336,6 @@ THE SOFTWARE. */
           // Set the low resolution first
           this.poster_ =
             "https://img.youtube.com/vi/" + this.url.videoId + "/0.jpg";
-          this.trigger("posterchange");
 
           // Check if their is a high res
           this.checkHighResPoster();
@@ -446,30 +348,7 @@ THE SOFTWARE. */
         } else {
           this.playOnReady = true;
         }
-      } else if (this.activeVideoId !== this.url.videoId) {
-        if (this.isReady_) {
-          this.cueVideoById_(this.url.videoId);
-          this.activeVideoId = this.url.videoId;
-        } else {
-          this.cueOnReady = true;
-        }
       }
-    },
-
-    autoplay: function () {
-      return this.options_.autoplay;
-    },
-
-    setAutoplay: function (val) {
-      this.options_.autoplay = val;
-    },
-
-    loop: function () {
-      return this.options_.loop;
-    },
-
-    setLoop: function (val) {
-      this.options_.loop = val;
     },
 
     play: function () {
@@ -492,7 +371,7 @@ THE SOFTWARE. */
         if (this.activeVideoId === this.url.videoId) {
           this.ytPlayer.playVideo();
         } else {
-          this.loadVideoById_(this.url.videoId);
+          this.ytPlayer.loadVideoById(this.url.videoId);
           this.activeVideoId = this.url.videoId;
         }
       } else {
@@ -555,18 +434,6 @@ THE SOFTWARE. */
       }
     },
 
-    seeking: function () {
-      return this.isSeeking;
-    },
-
-    seekable: function () {
-      if (!this.ytPlayer) {
-        return videojs.createTimeRange();
-      }
-
-      return videojs.createTimeRange(0, this.ytPlayer.getDuration());
-    },
-
     onSeeked: function () {
       clearInterval(this.checkSeekedInPauseInterval);
       this.isSeeking = false;
@@ -588,6 +455,7 @@ THE SOFTWARE. */
       }
 
       this.ytPlayer.setPlaybackRate(suggestedRate);
+      this.trigger("ratechange");
     },
 
     duration: function () {
@@ -595,7 +463,7 @@ THE SOFTWARE. */
     },
 
     currentSrc: function () {
-      return this.source && this.source.src;
+      return this.source;
     },
 
     ended: function () {
@@ -612,6 +480,9 @@ THE SOFTWARE. */
       }
 
       this.ytPlayer.setVolume(percentAsDecimal * 100.0);
+      this.setTimeout(function () {
+        this.trigger("volumechange");
+      }, 50);
     },
 
     muted: function () {
@@ -637,55 +508,37 @@ THE SOFTWARE. */
 
     buffered: function () {
       if (!this.ytPlayer || !this.ytPlayer.getVideoLoadedFraction) {
-        return videojs.createTimeRange();
+        return {
+          length: 0,
+          start: function () {
+            throw new Error("This TimeRanges object is empty");
+          },
+          end: function () {
+            throw new Error("This TimeRanges object is empty");
+          },
+        };
       }
 
-      var bufferedEnd =
+      var end =
         this.ytPlayer.getVideoLoadedFraction() * this.ytPlayer.getDuration();
 
-      return videojs.createTimeRange(0, bufferedEnd);
+      return {
+        length: this.ytPlayer.getDuration(),
+        start: function () {
+          return 0;
+        },
+        end: function () {
+          return end;
+        },
+      };
     },
 
     // TODO: Can we really do something with this on YouTUbe?
-    preload: function () {},
     load: function () {},
     reset: function () {},
-    networkState: function () {
-      if (!this.ytPlayer) {
-        return 0; //NETWORK_EMPTY
-      }
-      switch (this.ytPlayer.getPlayerState()) {
-        case -1: //unstarted
-          return 0; //NETWORK_EMPTY
-        case 3: //buffering
-          return 2; //NETWORK_LOADING
-        default:
-          return 1; //NETWORK_IDLE
-      }
-    },
-    readyState: function () {
-      if (!this.ytPlayer) {
-        return 0; //HAVE_NOTHING
-      }
-      switch (this.ytPlayer.getPlayerState()) {
-        case -1: //unstarted
-          return 0; //HAVE_NOTHING
-        case 5: //video cued
-          return 1; //HAVE_METADATA
-        case 3: //buffering
-          return 2; //HAVE_CURRENT_DATA
-        default:
-          return 4; //HAVE_ENOUGH_DATA
-      }
-    },
 
     supportsFullScreen: function () {
-      return (
-        document.fullscreenEnabled ||
-        document.webkitFullscreenEnabled ||
-        document.mozFullScreenEnabled ||
-        document.msFullscreenEnabled
-      );
+      return true;
     },
 
     // Tries to get the highest resolution thumbnail available for the video
@@ -719,12 +572,10 @@ THE SOFTWARE. */
   };
 
   Youtube.canPlaySource = function (e) {
-    return Youtube.canPlayType(e.type);
+    return e.type === "video/youtube";
   };
 
-  Youtube.canPlayType = function (e) {
-    return e === "video/youtube";
-  };
+  var _isOnMobile = /(iPad|iPhone|iPod|Android)/g.test(navigator.userAgent);
 
   Youtube.parseUrl = function (url) {
     var result = {
@@ -749,42 +600,11 @@ THE SOFTWARE. */
     return result;
   };
 
-  function apiLoaded() {
-    YT.ready(function () {
-      Youtube.isApiReady = true;
-
-      for (var i = 0; i < Youtube.apiReadyQueue.length; ++i) {
-        Youtube.apiReadyQueue[i].initYTPlayer();
-      }
-    });
-  }
-
-  function loadScript(src, callback) {
-    var loaded = false;
+  function loadApi() {
     var tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName("script")[0];
-    if (!firstScriptTag) {
-      // when loaded in jest without jsdom setup it doesn't get any element.
-      // In jest it doesn't really make sense to do anything, because no one is watching youtube in jest
-      return;
-    }
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    tag.onload = function () {
-      if (!loaded) {
-        loaded = true;
-        callback();
-      }
-    };
-    tag.onreadystatechange = function () {
-      if (
-        !loaded &&
-        (this.readyState === "complete" || this.readyState === "loaded")
-      ) {
-        loaded = true;
-        callback();
-      }
-    };
-    tag.src = src;
   }
 
   function injectCss() {
@@ -810,10 +630,16 @@ THE SOFTWARE. */
 
   Youtube.apiReadyQueue = [];
 
-  if (typeof document !== "undefined") {
-    loadScript("https://www.youtube.com/iframe_api", apiLoaded);
-    injectCss();
-  }
+  window.onYouTubeIframeAPIReady = function () {
+    Youtube.isApiReady = true;
+
+    for (var i = 0; i < Youtube.apiReadyQueue.length; ++i) {
+      Youtube.apiReadyQueue[i].initYTPlayer();
+    }
+  };
+
+  loadApi();
+  injectCss();
 
   // Older versions of VJS5 doesn't have the registerTech function
   if (typeof videojs.registerTech !== "undefined") {
@@ -822,3 +648,5 @@ THE SOFTWARE. */
     videojs.registerComponent("Youtube", Youtube);
   }
 });
+
+_vplayer = videojs("vid1");
