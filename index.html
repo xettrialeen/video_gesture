@@ -27,10 +27,18 @@
             <input type="range" min="0" max="100" value="0" class="slider" id="myRange">
         </div>
     </div>
-    <iframe width="560" height="500" src="https://www.youtube.com/embed/vOXZkm9p_zY" title="YouTube video player"
-        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe>
+    <video id="vid1" class="video-js vjs-default-skin" class="video-js" controls preload="auto" width="640" height="264"
+        poster="MY_VIDEO_POSTER.jpg"
+        data-setup='{ "techOrder": ["youtube"], "sources": [{ "type": "video/youtube", "src": "https://www.youtube.com/watch?v=xjS6SftYQaQ"}] }'>
 
+
+    </video>
+
+    <!-- <iframe width="560" height="500" src="https://www.youtube.com/embed/vOXZkm9p_zY" title="YouTube video player"
+        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe> -->
+    <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" />
+    <script src="./JS/youtube.js"></script>
     <script src="./JS/handTracking.js"></script>
     <script src="./JS/index.js"></script>
 </body>
