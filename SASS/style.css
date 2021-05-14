@@ -5,6 +5,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.contains {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 #video {
   transform: rotateY(180deg);
   -webkit-transform: rotateY(180deg);
@@ -46,4 +52,12 @@
   height: 25px;
   background: #04aa6d;
   cursor: pointer;
+}
+
+iframe {
+  margin-top: 50px;
+  display: flex;
+  justify-self: center;
+  width: 80%;
+  height: auto;
 }/*# sourceMappingURL=style.css.map */

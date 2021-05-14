@@ -12,23 +12,24 @@
 </head>
 
 <body>
+    <div class="contains">
+
+
+        <video src="" id="video">
+
+        </video>
+
+        <canvas id="canvas"></canvas>
 
 
 
-    <video src="" id="video">
-
-    </video>
-
-    <canvas id="canvas"></canvas>
-
+        <div class="slidecontainer">
+            <input type="range" min="0" max="100" value="0" class="slider" id="myRange">
+        </div>
+    </div>
     <iframe width="560" height="315" src="https://www.youtube.com/embed/vOXZkm9p_zY" title="YouTube video player"
         frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen></iframe>
-
-    <div class="slidecontainer">
-        <input type="range" min="0" max="100" value="0" class="slider" id="myRange">
-    </div>
-
 
     <script src="./JS/handTracking.js"></script>
     <script src="./JS/index.js"></script>

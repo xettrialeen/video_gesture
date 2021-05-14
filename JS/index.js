@@ -42,12 +42,11 @@ function runDetection() {
     // model.renderPredictions(prediction, canvas, context, video);
     // console.log(prediction[1].bbox[0] / 10);
 
-    if (prediction.length <= 0) {
-      myRange.value = 0;
-    } else {
-      console.log(prediction[1].bbox[0] / 5);
-      myRange.value = prediction[1].bbox[0] / 5;
-    }
+    // if (prediction.length <= 0) {
+    //   myRange.value = 0;
+    // } else {
+    // console.log(prediction[1].bbox[0] / 5);
+    myRange.value = prediction[1].bbox[0] / 5;
   });
 }
 
