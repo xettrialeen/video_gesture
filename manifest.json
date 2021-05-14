@@ -1,0 +1,21 @@
+{
+    "manifest_version": 2,
+    "name":"Youtube Hand Gesture",
+    "version":"1.0",
+    "description":"hand gesture",
+    "permissions": [
+      "activeTab","tabs", "http://*/*", "https://*/", "<all_urls>","scripting","videoCapture"
+  ],
+    "content_scripts":[{
+      "matches":[ "<all_urls>"],
+        "js":["./JS/index.js","./JS/handTracking.js"]
+ 
+        
+    }],
+    "browser_action":{
+      
+        "default_popup":"index.html"
+    }
+   
+  }
+  
