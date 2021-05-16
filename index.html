@@ -9,6 +9,8 @@
 
     <!-- css -->
     <link rel="stylesheet" href="./SASS/style.css">
+    <!-- <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" /> -->
+
 </head>
 
 <body>
@@ -21,23 +23,24 @@
 
         <canvas id="canvas"></canvas>
 
+        <video class="video1" id="video1" controls>
+            <source type="video/mp4" src="./video/Imagine Dragons - Birds (Animated Video).mp4">
+        </video>
 
-
-        <div class="slidecontainer">
+        <!-- <div class="slidecontainer">
             <input type="range" min="0" max="100" value="0" class="slider" id="myRange">
-        </div>
+        </div> -->
     </div>
-    <video id="vid1" class="video-js vjs-default-skin" controls width="560" height="315"
-        data-setup='{ "techOrder": ["youtube"], "sources": [{ "type": "video/youtube", "src": "https://www.youtube.com/watch?v=iRusbYIyRNI"}] }'>
 
 
-    </video>
+    <!-- <div class="plyr__video-embed" id="player">
+        <iframe
+            src="https://www.youtube.com/embed/bTqVqk7FSmY?origin=https://plyr.io&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1"
+            allow="autoplay"></iframe>
+    </div>
 
-    <!-- <iframe width="560" height="500" src="https://www.youtube.com/embed/vOXZkm9p_zY" title="YouTube video player"
-        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe> -->
-    <!-- <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" /> -->
-    <script src="./JS/youtube.js"></script>
+    <script src="https://cdn.plyr.io/3.6.8/plyr.js"></script> -->
+
     <script src="./JS/handTracking.js"></script>
     <script src="./JS/index.js"></script>
 </body>

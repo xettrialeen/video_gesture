@@ -1,3 +1,8 @@
+// // import Plyr from "plyr";
+// const player = new Plyr("#player", {});
+// player.volume; // 0.5;
+// player.currentTime; // 10
+// player.fullscreen.active; // false;
 const modelParams = {
   flipHorizontal: true, // flip e.g for video
   imageScaleFactor: 0.7, // reduce input image size .
@@ -19,6 +24,8 @@ const canvas = document.querySelector("#canvas");
 const context = canvas.getContext("2d");
 let model;
 let myRange = document.querySelector("#myRange");
+// video
+let videoYt = document.querySelector("#video1");
 
 // c starting handtracking
 handTrack.startVideo(video).then((status) => {
@@ -38,15 +45,36 @@ handTrack.startVideo(video).then((status) => {
 
 function runDetection() {
   model.detect(video).then((prediction) => {
-    console.log(prediction);
-    // model.renderPredictions(prediction, canvas, context, video);
-    // console.log(prediction[1].bbox[0] / 10);
+    let xValue = prediction[1].bbox[0] / 5;
+    let yValue = prediction[1].bbox[1] / 3;
+    let skip = 1;
+    let volume = (1 / 100) * 3;
+    // console.log(prediction);
+    console.log(xValue);
+    console.log(yValue);
 
-    // if (prediction.length <= 0) {
-    //   myRange.value = 0;
-    // } else {
-    // console.log(prediction[1].bbox[0] / 5);
-    myRange.value = prediction[1].bbox[0] / 5;
+    function skipping() {
+      if (xValue >= 50 && yValue >= 50) {
+        videoYt.currentTime += skip++;
+      } else {
+        if (xValue >= 50) {
+          videoYt.currentTime -= skip--;
+        }
+      }
+    }
+    skipping();
+    if (xValue <= 50 && yValue <= 50) {
+      videoYt.volume += volume++;
+    } else {
+      if (xValue <= 50) {
+        videoYt.volume -= volume--;
+      }
+    }
+
+    // videoYt.currentTime = prediction[1].bbox[0];
+    // videoYt.currentTime = prediction[1].bbox[0] / 2.5;
+
+    // myRange.value = prediction[1].bbox[0] / 5;
   });
 }
 

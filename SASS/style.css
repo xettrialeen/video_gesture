@@ -54,9 +54,7 @@
   cursor: pointer;
 }
 
-iframe {
-  margin-top: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.video1 {
+  width: 50%;
+  margin-top: -20px;
 }/*# sourceMappingURL=style.css.map */
